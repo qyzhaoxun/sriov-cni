@@ -1,3 +1,12 @@
+![No longer maintained](https://img.shields.io/badge/Maintenance-OFF-red.svg)
+
+### [DEPRECATED] This repository is no longer maintained
+> While this project is fully functional, the dependencies are no longer up to date. You are still welcome to explore, learn, and use the code provided here.
+> Or alternative repositories such as: 
+> [sriov-cni](https://github.com/intel/sriov-cni)
+> [sriov-network-device-plugin](https://github.com/intel/sriov-network-device-plugin)
+
+
    * [SR-IOV CNI plugin](#sr-iov-cni-plugin)
       * [Build](#build)
       * [Enable SR-IOV](#enable-sr-iov)
