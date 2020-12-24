@@ -23,9 +23,8 @@ else
   LINT_TARGETS="$PKG"
 fi
 
-sudo -E bash -c "umask 0; cd ${GOPATH}/src/${REPO_PATH}; PATH=${GOROOT}/bin:$(pwd)/bin:${PATH} ginkgo ${GINKGO_FLAGS}"
+#sudo -E bash -c "umask 0; ginkgo ${GINKGO_FLAGS}"
 
-cd ${GOPATH}/src/${REPO_PATH};
 echo "Checking gofmt..."
 fmtRes=$(go fmt $LINT_TARGETS)
 if [ -n "${fmtRes}" ]; then
