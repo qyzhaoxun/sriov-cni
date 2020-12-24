@@ -48,9 +48,9 @@ type NetConf struct {
 	PfNetdevices []string `json:"pfNetdevices"`
 }
 
-type pfInfo struct{
+type pfInfo struct {
 	PFNdevName string
-	NumVfs int
+	NumVfs     int
 }
 
 type pfList []*pfInfo
@@ -194,10 +194,10 @@ func (nc *NetConf) getNetConf(cid, podIfName, dataDir string, conf *NetConf) err
 func getOrderedPF(devices []string) ([]string, error) {
 	//check pf devices
 	var pfs pfList
-	for _, pfName := range(devices){
+	for _, pfName := range devices {
 		vfDir := fmt.Sprintf("/sys/class/net/%s/device/virtfn*/net/*", pfName)
 		vfs, err := filepath.Glob(vfDir)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		pfs = append(pfs, &pfInfo{pfName, len(vfs)})
@@ -206,7 +206,7 @@ func getOrderedPF(devices []string) ([]string, error) {
 	sort.Sort(pfs)
 
 	var result []string
-	for _, pf := range(pfs){
+	for _, pf := range pfs {
 		result = append(result, pf.PFNdevName)
 	}
 	return result, nil
@@ -720,7 +720,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 
-	for _, pf := range(pfs){
+	for _, pf := range pfs {
 		err = setupVF(n, pf, args.IfName, args.ContainerID, netns)
 		if err == nil {
 			break
