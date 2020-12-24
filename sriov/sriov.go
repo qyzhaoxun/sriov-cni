@@ -15,11 +15,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/containernetworking/cni/pkg/types/current"
+
 	"github.com/Mellanox/sriovnet"
-	"github.com/containernetworking/cni/pkg/ipam"
-	"github.com/containernetworking/cni/pkg/ns"
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
+	cniSpecVersion "github.com/containernetworking/cni/pkg/version"
+	"github.com/containernetworking/plugins/pkg/ipam"
+	"github.com/containernetworking/plugins/pkg/ns"
 	"github.com/vishvananda/netlink"
 )
 
@@ -741,34 +744,66 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("failed to set up pod interface %q from the device %v: %v", args.IfName, n.PfNetdevices, err)
 	}
 
-	// skip the IPAM allocation for the DPDK and L2 mode
-	var result *types.Result
-	if n.DPDKMode != false || n.L2Mode != false {
-		return result.Print()
-	}
-
-	// run the IPAM plugin and get back the config to apply
-	result, err = ipam.ExecAdd(n.IPAM.Type, args.StdinData)
-	if err != nil {
-		return fmt.Errorf("failed to set up IPAM plugin type %q from the device %q: %v", n.IPAM.Type, n.IF0, err)
-	}
-	if result.IP4 == nil {
-		return errors.New("IPAM plugin returned missing IPv4 config")
-	}
-	defer func() {
+	var vfMac string
+	// TODO(xunqyzhao) refactor
+	err = netns.Do(func(netNS ns.NetNS) error {
+		link, err := netlink.LinkByName(args.IfName)
 		if err != nil {
-			ipam.ExecDel(n.IPAM.Type, args.StdinData)
+			return err
 		}
-	}()
-	err = netns.Do(func(_ ns.NetNS) error {
-		return ipam.ConfigureIface(args.IfName, result)
+		vfMac = link.Attrs().HardwareAddr.String()
+		return nil
 	})
 	if err != nil {
 		return err
 	}
 
-	result.DNS = n.DNS
-	return result.Print()
+	// skip the IPAM allocation for the DPDK and L2 mode
+	result := &current.Result{
+		Interfaces: []*current.Interface{{
+			Name:    args.IfName,
+			Mac:     vfMac,
+			Sandbox: netns.Path(),
+		}},
+	}
+	if n.DPDKMode != false || n.L2Mode != false {
+		return types.PrintResult(result, n.CNIVersion)
+	}
+
+	// run the IPAM plugin and get back the config to apply
+	res, err := ipam.ExecAdd(n.IPAM.Type, args.StdinData)
+	if err != nil {
+		return fmt.Errorf("failed to set up IPAM plugin type %q from the device %q: %v", n.IPAM.Type, n.IF0, err)
+	}
+
+	// Convert the IPAM result into the current Result type
+	newResult, err := current.NewResultFromResult(res)
+	if err != nil {
+		return err
+	}
+
+	if len(newResult.IPs) == 0 {
+		return errors.New("IPAM plugin returned missing IP config")
+	}
+
+	defer func() {
+		if err != nil {
+			ipam.ExecDel(n.IPAM.Type, args.StdinData)
+		}
+	}()
+
+	newResult.Interfaces = result.Interfaces
+	idx0 := 0
+	newResult.IPs[0].Interface = &idx0
+	err = netns.Do(func(_ ns.NetNS) error {
+		return ipam.ConfigureIface(args.IfName, newResult)
+	})
+	if err != nil {
+		return err
+	}
+
+	newResult.DNS = n.DNS
+	return types.PrintResult(newResult, n.CNIVersion)
 }
 
 func cmdDel(args *skel.CmdArgs) error {
@@ -827,6 +862,10 @@ func setUpLink(ifName string) error {
 	return netlink.LinkSetUp(link)
 }
 
+func cmdCheck(args *skel.CmdArgs) error {
+	return nil
+}
+
 func main() {
-	skel.PluginMain(cmdAdd, cmdDel)
+	skel.PluginMain(cmdAdd, cmdCheck, cmdDel, cniSpecVersion.All, "")
 }
