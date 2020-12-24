@@ -1,9 +1,14 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-sriov-cni-ds-installer
   namespace: kube-system
+  labels:
+    name: sriov-cni-ds
 spec:
+  selector:
+    matchLabels:
+      name: sriov-cni-ds
   template:
     metadata:
       labels:
@@ -11,28 +16,28 @@ spec:
     spec:
       hostNetwork: true
       tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
       initContainers:
-      - name: install-cni
-        image: rdma/k8s-sriov-cni-installer
-        imagePullPolicy: IfNotPresent
-        command: [ "/installer/installer.sh" ]
-        volumeMounts:
-        - name: host-cni-etc
-          mountPath: /host-cni-etc
-        - name: host-cni-bin
-          mountPath: /host-cni-bin
-      containers:      
-      - name: install-cni-sleep
-        image: rdma/k8s-sriov-cni-installer
-        imagePullPolicy: IfNotPresent
-        command: [ "/installer/installer_sleep.sh" ]
+        - name: install-cni
+          image: rdma/k8s-sriov-cni-installer
+          imagePullPolicy: IfNotPresent
+          command: [ "/installer/installer.sh" ]
+          volumeMounts:
+            - name: host-cni-etc
+              mountPath: /host-cni-etc
+            - name: host-cni-bin
+              mountPath: /host-cni-bin
+      containers:
+        - name: install-cni-sleep
+          image: rdma/k8s-sriov-cni-installer
+          imagePullPolicy: IfNotPresent
+          command: [ "/installer/installer_sleep.sh" ]
       volumes:
-      - name: host-cni-etc
-        hostPath:
-              path: /etc/cni/net.d/
-      - name: host-cni-bin
-        hostPath:
-              path: /opt/cni/bin
+        - name: host-cni-etc
+          hostPath:
+            path: /etc/cni/net.d/multus/
+        - name: host-cni-bin
+          hostPath:
+            path: /opt/cni/bin

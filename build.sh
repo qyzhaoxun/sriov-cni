@@ -13,7 +13,7 @@ mkdir -p "${PWD}/bin"
 echo "Building plugins ${GOOS}"
 GIT_COMMIT=$(git rev-list -1 HEAD)
 LD_FLAGS="-X main.GitCommitId=$GIT_COMMIT"
-PLUGINS="sriov fixipam"
+PLUGINS="sriov"
 for d in $PLUGINS; do
 	if [ -d "$d" ]; then
 		plugin="$(basename "$d")"
