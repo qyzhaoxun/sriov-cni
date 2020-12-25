@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    k8s-app: mofed-test
+  name: mofed-test
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      k8s-app: mofed-test
+  serviceName: ""
+  template:
+    metadata:
+      annotations:
+        tke.cloud.tencent.com/networks: "tke-sriov-rdma"
+      creationTimestamp: null
+      labels:
+        k8s-app: mofed-test
+    spec:
+      containers:
+        - command: ["sh", "-c", "ls -l /dev/infiniband /sys/class/net && sleep 100000000"]
+          image: mellanox/mlnx_ofed_linux_5.0-2.1.8.0-centos7.7:latest
+          name: mofed-test-ctr
+          securityContext:
+            capabilities:
+              add: [ "IPC_LOCK" ]
+          resources:
+            limits:
+              rdma/vhca: 1

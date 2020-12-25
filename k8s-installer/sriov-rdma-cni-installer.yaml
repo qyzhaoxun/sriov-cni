@@ -1,39 +1,33 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: kube-sriov-cni-ds-installer
+  name: kube-sriov-rdma-ds-installer
   namespace: kube-system
   labels:
-    name: sriov-cni-ds
+    name: sriov-rdma-installer
 spec:
   selector:
     matchLabels:
-      name: sriov-cni-ds
+      name: sriov-rdma-installer
   template:
     metadata:
       labels:
-        name: sriov-cni-ds
+        name: sriov-rdma-installer
     spec:
       hostNetwork: true
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
           effect: NoSchedule
-      initContainers:
+      containers:
         - name: install-cni
-          image: rdma/k8s-sriov-cni-installer
+          image: ccr.ccs.tencentyun.com/qiyuan/sriov-rdma-cni-installer:v0.0.1
           imagePullPolicy: IfNotPresent
-          command: [ "/installer/installer.sh" ]
           volumeMounts:
             - name: host-cni-etc
               mountPath: /host-cni-etc
             - name: host-cni-bin
               mountPath: /host-cni-bin
-      containers:
-        - name: install-cni-sleep
-          image: rdma/k8s-sriov-cni-installer
-          imagePullPolicy: IfNotPresent
-          command: [ "/installer/installer_sleep.sh" ]
       volumes:
         - name: host-cni-etc
           hostPath:
