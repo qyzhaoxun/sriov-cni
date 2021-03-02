@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"net"
 	"os"
 	"time"
 
@@ -66,12 +67,39 @@ func initKubeClient() *kubernetes.Clientset {
 	return client
 }
 
-func ComputeRange(podCIDR string) (rangeStart, rangeEnd string) {
-	return "192.168.2.1", "192.168.2.63"
+func inc(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] > 0 {
+			break
+		}
+	}
 }
+
+func ComputeRange(cidr string) (rangeStart, rangeEnd string, err error) {
+	ip, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		klog.Errorf("parse cidr failed: %v ", err)
+		return "", "", err
+	}
+
+	var ips []string
+	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
+		ips = append(ips, ip.String())
+	}
+	// remove network address and broadcast address
+	return ips[0], ips[len(ips)-1], nil
+}
+
 func ConfigCNI(overlayIP, podCIDR string ) (err error) {
-	rangeStart, rangeEnd := ComputeRange(podCIDR)
+	rangeStart, rangeEnd, err := ComputeRange(podCIDR)
+	if err != nil {
+		return err
+	}
 	GenSRIOVConf("eth2", ClusterSubnet, rangeStart, rangeEnd, DefaultCNIConfDir)
+
+	// TODO: cp cni bin to /host-cni-bin ?
+
 	return nil
 }
 

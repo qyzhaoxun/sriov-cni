@@ -28,7 +28,7 @@ import (
 const (
     pluginName        = "tke-sriov-rdma"
     DefaultCNIConfDir = "/host-cni-etc"
-    ClusterSubnet     = "10.0.0.0/16"
+    ClusterSubnet     = "192.168.0.0/16"
 )
 
 const (
