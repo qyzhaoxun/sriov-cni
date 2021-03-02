@@ -1,11 +1,29 @@
-FROM  debian:stretch-slim
+FROM golang:1.14-alpine as builder
 
-ADD ./bin/sriov /usr/src/sriov-cni/bin/sriov
+ARG GIT_COMMIT=$(git rev-list -1 HEAD)
 
-WORKDIR /
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
 
-LABEL io.k8s.display-name="SR-IOV CNI"
+# config
+WORKDIR /go/src/nodeWatcher
+COPY go.mod .
+COPY go.sum .
+RUN GO111MODULE=on go mod download
+COPY . .
+RUN go install -ldflags "-s -w -X main.GitCommitId=$GIT_COMMIT" ./cmd/node-watcher/
+RUN go install -ldflags "-s -w -X main.GitCommitId=$GIT_COMMIT" ./cmd/fake-grpc-server/
+RUN go install -ldflags "-s -w -X main.GitCommitId=$GIT_COMMIT" ./cmd/sriov/
 
-ADD ./images/entrypoint.sh /
+FROM mellanox/rdma-cni as RDMA-CNI
 
-ENTRYPOINT ["/entrypoint.sh"]
+# runtime image
+FROM gcr.io/google_containers/ubuntu-slim:0.14
+COPY --from=RDMA-CNI /usr/bin/rdma /bin/rdma
+COPY --from=builder /go/bin/node-watcher /bin/node-watcher
+COPY --from=builder /go/bin/fake-grpc-server /bin/fake-grpc-server
+COPY --from=builder /go/bin/sriov /bin/sriov
+
+ENTRYPOINT ["/bin/node-watcher"]

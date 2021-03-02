@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-watcher
+  namespace: kube-system
+  labels:
+    name: node-watcher
+spec:
+  selector:
+    matchLabels:
+      name: node-watcher
+  template:
+    metadata:
+      labels:
+        name: node-watcher
+    spec:
+      hostNetwork: true
+      serviceAccount: node-watcher
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        rdma-overlay: true
+      containers:
+        - name: node-watcher
+          image: ccr.ccs.tencentyun.com/houminwei/node-watcher:v0.1.0
+          imagePullPolicy: IfNotPresent
+          args: ["--grpc-url", "localhost:50057"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: host-cni-etc
+              mountPath: /host-cni-etc
+            - name: host-cni-bin
+              mountPath: /host-cni-bin
+      volumes:
+        - name: host-cni-etc
+          hostPath:
+            path: /etc/cni/net.d/multus/
+        - name: host-cni-bin
+          hostPath:
+            path: /opt/cni/bin

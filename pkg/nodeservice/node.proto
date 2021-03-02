@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/SimpCosm/nodeWatcher/pkg/nodeservice";
+
+package NodeProto;
+
+message NodeReq {
+    string UnderlayIp = 1;
+    string PodCIDR = 2;
+}
+message NodeRes {
+    int32 Ret = 1;
+    string ErrMsg = 2;
+}
+service NodeService {
+    rpc InitNode (NodeReq) returns (NodeRes) {}
+    rpc AddClusterNode (NodeReq) returns (NodeRes) {}
+    rpc RemoveClusterNode (NodeReq) returns (NodeRes) {}
+}
+
+// protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative nodeservice/node.proto

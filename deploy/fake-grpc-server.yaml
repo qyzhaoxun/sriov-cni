@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fake-grpc-server
+  namespace: kube-system
+  labels:
+    name: fake-grpc-server
+spec:
+  selector:
+    matchLabels:
+      name: fake-grpc-server
+  template:
+    metadata:
+      labels:
+        name: fake-grpc-server
+    spec:
+      hostNetwork: true
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        rdma-overlay: true
+      containers:
+        - name: fake-grpc-server
+          image: ccr.ccs.tencentyun.com/houminwei/node-watcher:v0.0.8
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/fake-grpc-server"]
