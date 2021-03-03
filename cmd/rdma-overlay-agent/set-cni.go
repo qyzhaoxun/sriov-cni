@@ -17,29 +17,28 @@
 package main
 
 import (
-    "fmt"
-    "io/ioutil"
-    "os"
-    "path"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 
-    "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 )
 
 const (
-    pluginName        = "tke-sriov-rdma"
-    DefaultCNIConfDir = "/host-cni-etc"
-    ClusterSubnet     = "192.168.0.0/16"
+	pluginName        = "tke-sriov-rdma"
+	DefaultCNIConfDir = "/host-cni-etc"
 )
 
 const (
-    routeConfListTemplate = `{
+	routeConfListTemplate = `{
     "cniVersion": "0.3.1",
     "name": "tke-sriov-rdma",
     "plugins": [%s
     ]
 }`
 
-    SRIOVConfTemplate = `
+	SRIOVConfTemplate = `
         {
             "type": "sriov",
             "if0": "%s",
@@ -51,7 +50,7 @@ const (
             }
         }`
 
-    RDMAConf = `
+	RDMAConf = `
         {
             "type": "rdma",
             "args": {
@@ -63,21 +62,21 @@ const (
 )
 
 func GenSRIOVConf(netif, subnet, rangeStart, rangeEnd, confDir string) error {
-    sriovConf := fmt.Sprintf(SRIOVConfTemplate, netif, subnet, rangeStart, rangeEnd)
-    fileName := fmt.Sprintf("20-%s.conflist", pluginName)
+	sriovConf := fmt.Sprintf(SRIOVConfTemplate, netif, subnet, rangeStart, rangeEnd)
+	fileName := fmt.Sprintf("20-%s.conflist", pluginName)
 
-    pluginConf := sriovConf + "," + RDMAConf
+	pluginConf := sriovConf + "," + RDMAConf
 
-    cniConfList := fmt.Sprintf(routeConfListTemplate, pluginConf)
-    klog.Infof("generate %s conf %s : %s", pluginName, fileName, cniConfList)
+	cniConfList := fmt.Sprintf(routeConfListTemplate, pluginConf)
+	klog.V(5).Infof("generate %s conf %s : %s", pluginName, fileName, cniConfList)
 
-    if _, err := os.Stat(confDir); os.IsNotExist(err) {
-        if err1 := os.Mkdir(confDir, 0755); err1 != nil {
-            klog.Errorf("make conf dir %s failed, err: %v", confDir, err1)
-            return err1
-        }
-    }
+	if _, err := os.Stat(confDir); os.IsNotExist(err) {
+		if err1 := os.Mkdir(confDir, 0755); err1 != nil {
+			klog.Errorf("make conf dir %s failed, err: %v", confDir, err1)
+			return err1
+		}
+	}
 
-    klog.Infof("create conf file %s", fileName)
-    return ioutil.WriteFile(path.Join(confDir, fileName), []byte(cniConfList), 0644)
+	klog.V(5).Infof("create conf file %s", fileName)
+	return ioutil.WriteFile(path.Join(confDir, fileName), []byte(cniConfList), 0644)
 }

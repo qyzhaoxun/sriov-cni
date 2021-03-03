@@ -39,7 +39,8 @@ import (
 )
 
 var (
-	gRPCURL  string
+	gRPCURL         string
+	rdmaOverlayCidr string
 )
 
 func initKubeClient() *kubernetes.Clientset {
@@ -91,12 +92,12 @@ func ComputeRange(cidr string) (rangeStart, rangeEnd string, err error) {
 	return ips[2], ips[len(ips)-2], nil
 }
 
-func ConfigCNI(overlayIP, podCIDR string ) (err error) {
+func ConfigCNI(overlayIP, podCIDR string) (err error) {
 	rangeStart, rangeEnd, err := ComputeRange(podCIDR)
 	if err != nil {
 		return err
 	}
-	GenSRIOVConf("eth2", ClusterSubnet, rangeStart, rangeEnd, DefaultCNIConfDir)
+	GenSRIOVConf("eth2", rdmaOverlayCidr, rangeStart, rangeEnd, DefaultCNIConfDir)
 
 	return nil
 }
@@ -143,13 +144,13 @@ func main() {
 		PodCIDR:    nodeInfo.PodCIDR,
 	}
 
-	r, err := grpcClient.InitNode(ctxt, nodeRequest)
+	_, err = grpcClient.InitNode(ctxt, nodeRequest)
 	if err != nil {
 		log.Fatalf("could not init node: %v", err)
 	}
-	klog.Infof("init node success: %d", r.Ret)
+	klog.Infof("init node %s success: underlay ip: %s, pod cidr: %s", curNode.Name, nodeInfo.UnderlayIP, nodeInfo.PodCIDR)
 
-	// TODO modify node cni config, read from node annotation, config node cni config
+	rdmaOverlayCidr = os.Getenv("RDMA_OVERLAY_CIDR")
 	ConfigCNI(nodeInfo.UnderlayIP, nodeInfo.PodCIDR)
 
 	// create and start controller
@@ -167,5 +168,5 @@ func main() {
 }
 
 func init() {
-	flag.StringVar(&gRPCURL, "grpc-url", "", "The address of the gRPC server.")
+	flag.StringVar(&gRPCURL, "remote-overlay-service", "", "The address of the gRPC server which serves as remote overlay service.")
 }

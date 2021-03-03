@@ -37,7 +37,7 @@ type server struct {
 }
 
 func (s *server) InitNode(ctx context.Context, nodeReq *pb.NodeReq) (*pb.NodeRes, error) {
-	klog.Infof("Call Init Node %v",  nodeReq)
+	klog.Infof("Call Init Node %v", nodeReq)
 	return &pb.NodeRes{Ret: 0, ErrMsg: ""}, nil
 }
 
@@ -47,7 +47,7 @@ func (s *server) AddClusterNode(ctx context.Context, nodeReq *pb.NodeReq) (*pb.N
 }
 
 func (s *server) RemoveClusterNode(ctx context.Context, nodeReq *pb.NodeReq) (*pb.NodeRes, error) {
-	klog.Infof("Call Remove Cluster Node %v",  nodeReq)
+	klog.Infof("Call Remove Cluster Node %v", nodeReq)
 	return &pb.NodeRes{Ret: 0, ErrMsg: ""}, nil
 }
 

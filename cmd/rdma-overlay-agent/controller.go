@@ -44,13 +44,13 @@ import (
 )
 
 const (
-	UnderlayIP          = "tke.networking.cloud.com/rdma-vtep-remote-ip"
-	PodCIDR             = "tke.networking.cloud.com/rdma-overlay-pod-cidr"
+	UnderlayIP          = "networking.tke.cloud.tencent.com/rdma-vtep-remote-ip"
+	PodCIDR             = "networking.tke.cloud.tencent.com/rdma-overlay-pod-cidr"
 	controllerAgentName = "rdma-overlay-agent"
 )
 
 type NodeOverlayInfo struct {
-	PodCIDR string
+	PodCIDR    string
 	UnderlayIP string
 }
 
@@ -73,7 +73,7 @@ type Controller struct {
 	recorder record.EventRecorder
 
 	nodeCache map[string]*NodeOverlayInfo
-	nLock      *sync.RWMutex
+	nLock     *sync.RWMutex
 
 	grpcClient pb.NodeServiceClient
 
@@ -100,16 +100,16 @@ func NewController(
 		nodesLister:   nodeInformer.Lister(),
 		nodesSynced:   nodeInformer.Informer().HasSynced,
 		// TODO rate limit: 指数回退 or 线性回退 ？ 回退最大值？
-		workqueue:     workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), controllerAgentName),
-		recorder:      recorder,
-		nodeCache:      make(map[string]*NodeOverlayInfo),
-		nLock:      new(sync.RWMutex),
+		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), controllerAgentName),
+		recorder:  recorder,
+		nodeCache: make(map[string]*NodeOverlayInfo),
+		nLock:     new(sync.RWMutex),
 	}
 
 	klog.Info("setting up event handlers")
 
 	nodeInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    controller.enqueueNode,
+		AddFunc: controller.enqueueNode,
 		UpdateFunc: func(old, new interface{}) {
 			newNode := new.(*corev1.Node)
 			oldNode := old.(*corev1.Node)
@@ -286,12 +286,12 @@ func (c *Controller) handleNodeAddOrUpdate(key string) error {
 
 	// TODO cache add another member
 	// TODO what if add failed
-	r, err := c.grpcClient.AddClusterNode(c.context, nodeRequest)
+	_, err = c.grpcClient.AddClusterNode(c.context, nodeRequest)
 	if err != nil {
 		klog.Errorf("could not add node: %v", err)
 		return err
 	}
-	klog.Infof("add node %s success: %d", node.Name, r.Ret)
+	klog.Infof("add node %s success: underlay ip %s, pod cidr %s", node.Name, nodeInfo.UnderlayIP, nodeInfo.PodCIDR)
 
 	return nil
 }
@@ -311,12 +311,12 @@ func (c *Controller) handleNodeRemove(key string) error {
 		PodCIDR:    nodeInfo.PodCIDR,
 	}
 
-	r, err := c.grpcClient.RemoveClusterNode(c.context, nodeRequest)
+	_, err = c.grpcClient.RemoveClusterNode(c.context, nodeRequest)
 	if err != nil {
 		klog.Errorf("could not remove node: %v", err)
 		return err
 	}
-	klog.Infof("remove node success: %d", r.Ret)
+	klog.Infof("remove node %s success: underlay ip %s, pod cidr %s", key, nodeInfo.UnderlayIP, nodeInfo.PodCIDR)
 
 	c.DeleteNodeInfoFromCache(key)
 
@@ -336,7 +336,6 @@ func GetOverlayInfo(node *corev1.Node) (nodeInfo *NodeOverlayInfo, err error) {
 	nodeInfo = &NodeOverlayInfo{podCIDR, underlayIP}
 	return nodeInfo, nil
 }
-
 
 func (c *Controller) AddNodeInfoToCache(key string, nodeInfo *NodeOverlayInfo) {
 	c.nLock.Lock()

@@ -39,11 +39,18 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: RDMA_OVERLAY_CIDR
+              valueFrom:
+                configMapKeyRef:
+                  name: rdma-overlay-cidr-config
+                  key: rdma-overlay-cidr
           volumeMounts:
             - name: host-cni-etc
               mountPath: /host-cni-etc
             - name: host-cni-bin
               mountPath: /host-cni-bin
+            - name: config
+              mountPath: /k8s-rdma-sriov-dev-plugin
       volumes:
         - name: host-cni-etc
           hostPath:

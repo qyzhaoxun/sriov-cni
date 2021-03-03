@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rdma-overlay-cidr-config
+  namespace: kube-system
+data:
+  rdma-overlay-cidr: "192.168.0.0/16"
