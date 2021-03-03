@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    k8s-app: ofed-deploy-test
+  name: ofed-deploy-test
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: ofed-deploy-test
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        tke.cloud.tencent.com/networks: tke-bridge,tke-sriov-rdma
+      creationTimestamp: null
+      labels:
+        k8s-app: ofed-deploy-test
+    spec:
+      containers:
+        - command:
+            - sh
+            - -c
+            - ls -l /dev/infiniband /sys/class/net && sleep 100000000
+          image: ccr.ccs.tencentyun.com/houminwei/mlnx_ofed_linux_5.0-2.1.8.0-centos7.7:v0.0.1
+          imagePullPolicy: IfNotPresent
+          name: ofed-deploy-test-ctr
+          resources:
+            limits:
+              rdma/vhca: "1"
+          securityContext:
+            capabilities:
+              add:
+                - IPC_LOCK
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File

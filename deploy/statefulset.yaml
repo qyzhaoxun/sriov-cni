@@ -2,27 +2,27 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    k8s-app: mofed-test
-  name: mofed-test
+    k8s-app: ofed-statefulset-test
+  name: ofed-statefulset-test
   namespace: default
 spec:
   replicas: 2
   selector:
     matchLabels:
-      k8s-app: mofed-test
+      k8s-app: ofed-statefulset-test
   serviceName: ""
   template:
     metadata:
       annotations:
-        tke.cloud.tencent.com/networks: "tke-sriov-rdma"
+        tke.cloud.tencent.com/networks: tke-bridge,tke-sriov-rdma
       creationTimestamp: null
       labels:
-        k8s-app: mofed-test
+        k8s-app: ofed-statefulset-test
     spec:
       containers:
         - command: ["sh", "-c", "ls -l /dev/infiniband /sys/class/net && sleep 100000000"]
-          image: mellanox/mlnx_ofed_linux_5.0-2.1.8.0-centos7.7:latest
-          name: mofed-test-ctr
+          image: ccr.ccs.tencentyun.com/houminwei/mlnx_ofed_linux_5.0-2.1.8.0-centos7.7:v0.0.1
+          name: ofed-statefulset-test-ctr
           securityContext:
             capabilities:
               add: [ "IPC_LOCK" ]
