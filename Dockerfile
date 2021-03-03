@@ -25,5 +25,6 @@ COPY --from=RDMA-CNI /usr/bin/rdma /bin/rdma
 COPY --from=builder /go/bin/node-watcher /bin/node-watcher
 COPY --from=builder /go/bin/fake-grpc-server /bin/fake-grpc-server
 COPY --from=builder /go/bin/sriov /bin/sriov
+COPY entrypoint.sh /entrypoint.sh
 
-ENTRYPOINT ["/bin/node-watcher"]
+ENTRYPOINT ["/entrypoint.sh"]

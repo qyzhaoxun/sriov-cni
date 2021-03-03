@@ -19,10 +19,8 @@ spec:
         - key: node-role.kubernetes.io/master
           operator: Exists
           effect: NoSchedule
-      nodeSelector:
-        rdma-overlay: true
       containers:
         - name: fake-grpc-server
-          image: ccr.ccs.tencentyun.com/houminwei/node-watcher:v0.0.8
+          image: ccr.ccs.tencentyun.com/houminwei/node-watcher:v0.1.6
           imagePullPolicy: IfNotPresent
           command: ["/bin/fake-grpc-server"]

@@ -14,17 +14,17 @@ spec:
       labels:
         name: node-watcher
     spec:
+      nodeSelector:
+        rdma-overlay: enable
       hostNetwork: true
       serviceAccount: node-watcher
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
           effect: NoSchedule
-      nodeSelector:
-        rdma-overlay: true
       containers:
         - name: node-watcher
-          image: ccr.ccs.tencentyun.com/houminwei/node-watcher:v0.1.0
+          image: ccr.ccs.tencentyun.com/houminwei/node-watcher:v0.1.6
           imagePullPolicy: IfNotPresent
           args: ["--grpc-url", "localhost:50057"]
           env:
