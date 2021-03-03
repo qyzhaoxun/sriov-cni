@@ -13,7 +13,7 @@ COPY go.mod .
 COPY go.sum .
 RUN GO111MODULE=on go mod download
 COPY . .
-RUN go install -ldflags "-s -w -X main.GitCommitId=$GIT_COMMIT" ./cmd/node-watcher/
+RUN go install -ldflags "-s -w -X main.GitCommitId=$GIT_COMMIT" ./cmd/rdma-overlay-agent/
 RUN go install -ldflags "-s -w -X main.GitCommitId=$GIT_COMMIT" ./cmd/fake-grpc-server/
 RUN go install -ldflags "-s -w -X main.GitCommitId=$GIT_COMMIT" ./cmd/sriov/
 
@@ -22,7 +22,7 @@ FROM mellanox/rdma-cni as RDMA-CNI
 # runtime image
 FROM gcr.io/google_containers/ubuntu-slim:0.14
 COPY --from=RDMA-CNI /usr/bin/rdma /bin/rdma
-COPY --from=builder /go/bin/node-watcher /bin/node-watcher
+COPY --from=builder /go/bin/rdma-overlay-agent /bin/rdma-overlay-agent
 COPY --from=builder /go/bin/fake-grpc-server /bin/fake-grpc-server
 COPY --from=builder /go/bin/sriov /bin/sriov
 COPY entrypoint.sh /entrypoint.sh

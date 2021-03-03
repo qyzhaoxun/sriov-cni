@@ -2,7 +2,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: node-watcher
+  name: rdma-overlay-agent
 rules:
   - apiGroups:
       - ""
@@ -40,19 +40,19 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: node-watcher
+  name: rdma-overlay-agent
   namespace: kube-system
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: node-watcher
+  name: rdma-overlay-agent
   namespace: kube-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: node-watcher
+  name: rdma-overlay-agent
 subjects:
   - kind: ServiceAccount
-    name: node-watcher
+    name: rdma-overlay-agent
     namespace: kube-system

@@ -21,6 +21,13 @@ spec:
           effect: NoSchedule
       containers:
         - name: fake-grpc-server
-          image: ccr.ccs.tencentyun.com/houminwei/node-watcher:v0.1.6
+          image: ccr.ccs.tencentyun.com/houminwei/rdma-overlay-agent:v0.1.9
           imagePullPolicy: IfNotPresent
           command: ["/bin/fake-grpc-server"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "50Mi"
+            limits:
+              cpu: "100m"
+              memory: "50Mi"

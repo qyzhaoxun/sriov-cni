@@ -88,7 +88,7 @@ func ComputeRange(cidr string) (rangeStart, rangeEnd string, err error) {
 		ips = append(ips, ip.String())
 	}
 	// remove network address and broadcast address
-	return ips[0], ips[len(ips)-1], nil
+	return ips[2], ips[len(ips)-2], nil
 }
 
 func ConfigCNI(overlayIP, podCIDR string ) (err error) {
@@ -97,8 +97,6 @@ func ConfigCNI(overlayIP, podCIDR string ) (err error) {
 		return err
 	}
 	GenSRIOVConf("eth2", ClusterSubnet, rangeStart, rangeEnd, DefaultCNIConfDir)
-
-	// TODO: cp cni bin to /host-cni-bin ?
 
 	return nil
 }
