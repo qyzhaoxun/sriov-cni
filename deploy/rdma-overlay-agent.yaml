@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rdma-overlay-agent
+  namespace: kube-system
+  labels:
+    name: rdma-overlay-agent
+spec:
+  selector:
+    matchLabels:
+      name: rdma-overlay-agent
+  template:
+    metadata:
+      labels:
+        name: rdma-overlay-agent
+    spec:
+      nodeSelector:
+        rdma-overlay: enable
+      hostNetwork: true
+      serviceAccount: rdma-overlay-agent
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: rdma-overlay-agent
+          image: ccr.ccs.tencentyun.com/houminwei/rdma-overlay-agent:v0.1.9
+          imagePullPolicy: IfNotPresent
+          args: ["--grpc-url", "localhost:50057"]
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "50Mi"
+            limits:
+              cpu: "100m"
+              memory: "50Mi"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: RDMA_OVERLAY_CIDR
+              valueFrom:
+                configMapKeyRef:
+                  name: rdma-overlay-cidr-config
+                  key: rdma-overlay-cidr
+          volumeMounts:
+            - name: host-cni-etc
+              mountPath: /host-cni-etc
+            - name: host-cni-bin
+              mountPath: /host-cni-bin
+            - name: config
+              mountPath: /k8s-rdma-sriov-dev-plugin
+      volumes:
+        - name: host-cni-etc
+          hostPath:
+            path: /etc/cni/net.d/multus/
+        - name: host-cni-bin
+          hostPath:
+            path: /opt/cni/bin
