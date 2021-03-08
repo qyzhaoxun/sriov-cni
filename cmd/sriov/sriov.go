@@ -665,10 +665,9 @@ func validateSriovEnabled(pfName string) error {
 	}
 
 	if vfTotal == 0 {
-		err = configSriov(pfName)
-		if err != nil {
-			return fmt.Errorf("no virtual function in the device %q", pfName)
-		}
+		// houmin: wait for node level agent to enable sriov
+		// err = configSriov(pfName)
+		return errors.New("sriov not enabled yet, waiting for node level agent to enable sriov")
 	}
 	return nil
 }

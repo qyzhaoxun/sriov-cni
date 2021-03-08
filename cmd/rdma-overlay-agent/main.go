@@ -41,6 +41,7 @@ import (
 var (
 	gRPCURL         string
 	rdmaOverlayCidr string
+	curNodeName     string
 )
 
 func initKubeClient() *kubernetes.Clientset {
@@ -126,7 +127,7 @@ func main() {
 	defer cancel()
 
 	// gRPC call init node
-	curNodeName := os.Getenv("NODE_NAME")
+	curNodeName = os.Getenv("NODE_NAME")
 	curNode, err := kubeClient.CoreV1().Nodes().Get(ctxt, curNodeName, metav1.GetOptions{})
 	if err != nil {
 		klog.Fatalf("could not get current node: %v", err)

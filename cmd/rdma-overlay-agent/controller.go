@@ -262,12 +262,15 @@ func (c *Controller) enqueueNode(obj interface{}) {
 func (c *Controller) handleNodeAddOrUpdate(key string) error {
 	klog.Infof("handle node %s add event", key)
 
+	if key == curNodeName {
+		klog.Infof("receive current node %s add event, just return", key)
+		return nil
+	}
+
 	node, err := c.nodesLister.Get(key)
 	if err != nil {
 		return err
 	}
-
-	// TODO if node == current node
 
 	// if node annotation does not have RDMA overlay info, it is not RDMA overlay node yet, just return
 	// RDMA node would receive update event, call it here
